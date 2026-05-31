@@ -330,8 +330,17 @@ def save_jsonl(items: List[Dict], output_path: str) -> None:
 # MongoDB
 # ---------------------------------------------------------------------------
 
+def _mongo_client(uri: str, timeout: int = 10000):
+    import certifi
+    return MongoClient(
+        uri,
+        serverSelectionTimeoutMS=timeout,
+        tlsCAFile=certifi.where(),
+    )
+
+
 def save_to_mongodb(uri: str, database: str, collection: str, items: List[Dict]) -> Dict:
-    client = MongoClient(uri, serverSelectionTimeoutMS=10000)
+    client = _mongo_client(uri)
     client.admin.command("ping")
     db     = client[database]
     coll   = db[collection]
@@ -342,7 +351,7 @@ def save_to_mongodb(uri: str, database: str, collection: str, items: List[Dict])
 
 def test_mongodb_connection(uri: str) -> bool:
     try:
-        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        client = _mongo_client(uri, timeout=5000)
         client.admin.command("ping")
         client.close()
         return True
